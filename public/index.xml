@@ -2,48 +2,48 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>John Compton&#39;s Blog</title>
-    <link>/datactician.netlify.com/</link>
+    <link>/</link>
     <description>Recent content on John Compton&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 28 May 2019 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/datactician.netlify.com/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Predicting Sales Based on Online Shoppers Behavior</title>
-      <link>/datactician.netlify.com/post/internet-ad-sales-classification/</link>
+      <link>/post/internet-ad-sales-classification/</link>
       <pubDate>Mon, 09 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/datactician.netlify.com/post/internet-ad-sales-classification/</guid>
+      <guid>/post/internet-ad-sales-classification/</guid>
       <description>AbstractThe internet is flooded with online advertisements that are intended to market products as users perform other tasks.</description>
     </item>
     
     <item>
       <title>Writing Functions</title>
-      <link>/datactician.netlify.com/post/writing-functions/</link>
+      <link>/post/writing-functions/</link>
       <pubDate>Mon, 09 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/datactician.netlify.com/post/writing-functions/</guid>
+      <guid>/post/writing-functions/</guid>
       <description>In Stat 385 one of the main things we’ve been working on is writing various and more complicated functions.</description>
     </item>
     
     <item>
       <title></title>
-      <link>/datactician.netlify.com/archives/</link>
+      <link>/archives/</link>
       <pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate>
       
-      <guid>/datactician.netlify.com/archives/</guid>
+      <guid>/archives/</guid>
       <description></description>
     </item>
     
     <item>
       <title>About</title>
-      <link>/datactician.netlify.com/about/</link>
+      <link>/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>/datactician.netlify.com/about/</guid>
+      <guid>/about/</guid>
       <description>My name is John Compton. I am a senior studying economics and statistics at the University of Illinois at Urbana-Champaign.</description>
     </item>
     

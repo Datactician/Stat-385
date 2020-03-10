@@ -1,4 +1,4 @@
-baseURL = "datactician.netlify.com/"
+baseURL = "/"
 languageCode = "en-us"
 title = "John Compton's Blog"
 theme = "hugo-theme-noteworthy"

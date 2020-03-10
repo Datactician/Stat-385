@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>random forest on John Compton&#39;s Blog</title>
-    <link>/datactician.netlify.com/tags/random-forest/</link>
+    <link>/tags/random-forest/</link>
     <description>Recent content in random forest on John Compton&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 09 Mar 2020 00:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/datactician.netlify.com/tags/random-forest/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/random-forest/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Predicting Sales Based on Online Shoppers Behavior</title>
-      <link>/datactician.netlify.com/post/internet-ad-sales-classification/</link>
+      <link>/post/internet-ad-sales-classification/</link>
       <pubDate>Mon, 09 Mar 2020 00:00:00 +0000</pubDate>
       
-      <guid>/datactician.netlify.com/post/internet-ad-sales-classification/</guid>
+      <guid>/post/internet-ad-sales-classification/</guid>
       <description>AbstractThe internet is flooded with online advertisements that are intended to market products as users perform other tasks.</description>
     </item>
     
