@@ -8,7 +8,7 @@ tags:
   - r
   - functions
   - data visualization
-draft: yes
+draft: false
 ---
 
 In Stat 385 one of the main things we've been working on is writing various and more complicated functions. 

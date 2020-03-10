@@ -2,7 +2,7 @@
 title: "Predicting Sales Based on Online Shoppers Behavior"
 author: "John Compton"
 date: '2020-03-09'
-draft: yes
+draft: false
 slug: internet-ad-sales-classification
 tags:
 - r
