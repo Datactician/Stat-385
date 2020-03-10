@@ -24,7 +24,7 @@ summaryLength = 10 # Configure how long the post summary should be on the homepa
 
 	# Add links to your accounts. Remove the ones you don't want to include.
 	# Main
-	email = "jfc2@illinois.edu"
+	email = jfc2@illinois.edu
     facebook = "https://www.facebook.com/john.compton.5268750?ref=bookmarks"
 	linkedin = "https://www.linkedin.com/in/john-compton-8a38b5150/"
 
