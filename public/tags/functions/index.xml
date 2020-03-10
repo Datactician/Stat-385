@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>functions on John Compton&#39;s Blog</title>
+    <link>/tags/functions/</link>
+    <description>Recent content in functions on John Compton&#39;s Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 09 Mar 2020 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/functions/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Writing Functions</title>
+      <link>/post/writing-functions/</link>
+      <pubDate>Mon, 09 Mar 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/writing-functions/</guid>
+      <description>In Stat 385 one of the main things we’ve been working on is writing various and more complicated functions.</description>
+    </item>
+    
+  </channel>
+</rss>

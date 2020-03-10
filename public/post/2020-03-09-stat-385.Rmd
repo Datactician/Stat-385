@@ -1,0 +1,50 @@
+---
+title: Writing Functions
+author: John Compton
+date: '2020-03-09'
+slug: writing-functions
+categories: []
+tags:
+  - r
+  - functions
+  - data visualization
+draft: yes
+---
+
+In Stat 385 one of the main things we've been working on is writing various and more complicated functions. 
+
+For example we wrote the following vectorized roulette function to simulate the rewards for a French Roulette.
+
+A French roulette has:
+  37 colored and numbered pockets on the wheel.
+  0 is green.
+  In number ranges from 1 to 10 and 19 to 28:
+  Odd numbers are red.
+  Even numbers are black.
+  In ranges from 11 to 18 and 29 to 36:
+  Odd numbers are black.
+  Even numbers are red.
+
+```{r}
+roulette_vec = function(many_bets)
+{
+  win_lose_random <- sample(x = c(TRUE, FALSE), size = length(many_bets),
+                            replace = TRUE)
+  many_bets[many_bets == "high"|| many_bets == "low"] = 10
+  many_bets[many_bets == "red"|| many_bets == "black"] = 20
+  many_bets[many_bets == "odd"|| many_bets == "even"] = 15
+  many_bets[many_bets == "first"|| many_bets == "second" || many_bets == "third"] = 50
+  ifelse(many_bets[win_lose_random], many_bets, 0)
+}
+```
+
+
+We have also been working on data visualizations:
+
+```{r}
+hist(faithful$eruptions, breaks = 18, border = "dodgerblue", probability = TRUE, xlim = c(1,6), 
+     ylim = c(0, 0.85), xlab = "Eruption Time (mins)", main = "Histogram of Old Faithful Geyser Eruption Time")
+box()
+grid()
+lines(density(faithful$eruptions), lwd = 2, col = "Orange")
+```

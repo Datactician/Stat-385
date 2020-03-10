@@ -1,0 +1,343 @@
+---
+title: "Predicting Sales Based on Online Shoppers Behavior"
+author: "John Compton"
+date: '2020-03-09'
+draft: yes
+slug: internet-ad-sales-classification
+tags:
+- r
+- machine learning
+- random forest
+- neural network
+categories: []
+---
+
+```{r, setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.align = 'center')
+```
+
+```{r, libraries, include = FALSE}
+# load packages
+library("tidyverse")
+library("rsample")
+library("Hmisc")
+library("caret")
+library("e1071")
+library("ranger")
+library("dplyr")
+library("kernlab")
+library("nnet")
+library("knitr")
+library("kableExtra")
+library("glmnet")
+library("RANN")
+library("DMwR")
+library("pROC")
+library("gbm")
+```
+
+```{r, load-data, include = FALSE}
+onl_shop = read.csv("online_shoppers_intention.csv")
+```
+
+***
+
+# Abstract
+
+> The internet is flooded with online advertisements that are intended to market products as users perform other tasks. These online advertisements are capable of generating more revenue for the sites that market to the advertisers and for the producers selling their product. The capability to accurately predict whether someone will make a purchase is an integral part of deciding how to advertise. A variety of statistical models such as random forests were applied to be able to classify whether or not someone made a purchase after an advertisement. 
+
+***
+
+# Introduction
+
+The internet has revolutionized modern life and the way we approach almost everything. One of the reasons the internet is provided for free is because search engines like Google are able to monetize online sales, with Google generating 126.3 billion dollars in ad revenue. [^1] The average person sees over 1,700 banner ads per month, although only half of them are even interacted with. [^2] The ability to predict a sale would be a very useful tool for companies that are attempting to market their product and for websites and search engines that are marketing their advertising.
+
+A variety of statistcal models and learning methods were applied to predict if a customers' visit to a website resulted in revenue. The data on customers' interaction with websites was used to classify whether or not any revenue was generated as opposed to the amount of revenue. A variety of different classification models and resampling were used and will be discussed more in the methods and results sections.
+
+***
+
+# Methods
+
+## Data
+
+This data was obtained through Kaggle [^3] and is sourced to the Department of Computer Engineering from Bahcesehir University. It consists of both customer behavior related information as well as some additional information about the customer, such as their browser of choice and what operating system they are using. The data set also contains information releating to the duration of time they were in various locations of the site, the proximity of the date the site was accessed to any sort of holiday, or whether the customer had visited the site before. 
+
+The reponse variable "Revenue" has two classes; "TRUE" and "FALSE". A session labelled "TRUE" meant the user of that session produced revenue (i.e. bought something) from the website. "FALSE" means the user did not for that session. 
+
+There is an imbalance between the two as is illustrated in the following figure.
+
+```{r, class-imbalance-fig, fig.height = 4, fig.width = 8}
+onl_shop %>%
+  ggplot(aes(x = Revenue, fill = Revenue)) +
+  geom_bar() +
+  labs(title = "Sessions That Generated Revenue", fill = "Revenue Generated", x = "") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+The dataset contains some missing values. The following table shows the percentage of missing values each column has.
+
+```{r, missing-data-table}
+tibble(
+  "Column" = colnames(onl_shop),
+  "Percentage of Missing Values" =  as.numeric(colMeans(is.na(onl_shop)))
+) %>%
+  kable(caption = "Percentage of Missing Values for Each Column of the Shopper Dataset", digits = 4) %>%
+  kable_styling("striped", full_width = FALSE)
+```
+
+While the number of missing values was low, we decided that instead of omitting those rows from the dataset, we would impute dummy values to replace those missing values. To impute values, the caret package's preProcess was used with method "knnImpute" using the default k value. The data was also resampled using the Hmisc package's SMOTE function.
+
+```{r, data-processing}
+# re-factor the response variable
+onl_shop$Revenue = factor(as.character(onl_shop$Revenue))
+levels(onl_shop$Revenue) = c("no_revenue", "revenue")
+
+pp = preProcess(onl_shop, method = "knnImpute")
+onl_shop = predict(pp, onl_shop)
+onl_shop = SMOTE(form = Revenue ~ ., data = onl_shop, perc.over = 100)
+```
+
+```{r, gen-train-data}
+set.seed(4200)
+# test-train split
+onl_tst_trn_split = initial_split(onl_shop, prop = 0.80)
+onl_trn = training(onl_tst_trn_split)
+onl_tst = testing(onl_tst_trn_split)
+
+# create x matrix for use with cv.glmnet, exclude the intercept
+onl_trn_x = model.matrix(Revenue ~ ., data = onl_trn)[, -1]
+onl_tst_x = model.matrix(Revenue ~ ., data = onl_tst)[, -1]
+```
+
+## Modeling
+
+To determine whether or not a user's session produced revenue, four classification techniques were used. 
+
+These techniques include:
+
+- Stochastic Gradient Boosting, through the use of the `gbm` package. 
+- Support Vector Machine with Linear Kernel, through the use of the `kernLab` package. 
+- Random Forest, through the use of the `ranger` package. 
+- Neural Network, through the use of the `nnet` package. 
+
+### Evaluation
+
+Models were tuned through the use of the `caret` package. 
+
+Each model was tuned using different metrics:
+
+- The stochastic gradient boosting model and random forest model were tuned to maximize Accuracy.
+- The support vector machine model was tuned to maximize Sensitivity.
+- The neural network model was tuned to maximize area under the ROC curve.
+
+While each model's accuracy when predicting the testing set was taken into consideration, evaluating models based on their sensitivities was also taken into account because of the class imbalance. Since the task is to detect if a user's session will produce revenue, a model that has poor performance in predicting session's that produce revenue are valued lower than models that have higher performance in that regard.
+
+Each model besides the Random Forest model was trained using 5-fold cross-validation. The Random Forest model uses out-of-bag error.
+
+```{r, train-control}
+cv_trControl = trainControl(method = "cv", 
+                            number = 5, 
+                            classProbs = TRUE, 
+                            summaryFunction = twoClassSummary)
+oob_trControl = trainControl(method = "oob")
+```
+
+```{r}
+set.seed(1)
+```
+
+### Stochastic Gradient Boosting
+
+```{r, train-gm-model, echo = TRUE}
+gbmModel = train(
+  Revenue ~ .,
+  data = onl_trn,
+  method = "gbm",
+  verbose = FALSE,
+  metric = "ROC",
+  trControl = cv_trControl
+)
+```
+
+### Support Vector Machine with Linear Kernel
+
+```{r}
+set.seed(1)
+```
+
+```{r, train-svm-model, echo = TRUE}
+svmModel = train(
+  form = Revenue ~ .,
+  data = onl_trn,
+  metric = "Sens",
+  maximize = TRUE,
+  verbose = FALSE,
+  method = "svmLinear",
+  trControl = cv_trControl
+)
+```
+
+### Random Forest
+
+```{r}
+set.seed(1)
+```
+
+```{r, train-rf, echo = TRUE}
+rfModel = train(
+  form = Revenue ~ .,
+  data = onl_trn,
+  verbose = FALSE,
+  method = "ranger",
+  trControl = oob_trControl
+)
+```
+
+### Neural Network
+
+```{r}
+set.seed(1)
+```
+
+```{r, train-nnet-model, echo = TRUE}
+nnetModel = train(
+  Revenue ~ ., 
+  data = onl_trn,
+  method = "nnet",
+  metric = "ROC",
+  verbose = FALSE,
+  trace = FALSE,
+  trControl = cv_trControl
+)
+```
+
+Model selection and evaluation will be further considered in the results and discussion sections.
+
+***
+
+# Results
+
+```{r, generate-results, message = FALSE}
+set.seed(1)
+# Predicting on the test data using the stochastic gradient boosting model
+pred = predict(gbmModel, newdata = onl_tst, type = "raw")
+pred = factor(pred)
+confMatGBM = confusionMatrix(pred, onl_tst$Revenue, positive = "revenue")
+gbmROC = roc(as.numeric(pred), as.numeric(onl_tst$Revenue))
+
+# Predicting on the test data using the support vector machine model with linear kernel
+pred = predict(svmModel, newdata = onl_tst, type = "raw")
+confMatSVM = confusionMatrix(pred, onl_tst$Revenue, "revenue")
+svmROC = roc(as.numeric(pred), as.numeric(onl_tst$Revenue))
+
+# Predicting on the test data using the random forest model
+set.seed(4200)
+pred = predict(rfModel, newdata = onl_tst, type = "raw")
+confMatRf = confusionMatrix(pred, onl_tst$Revenue, "revenue")
+rfROC = roc(as.numeric(pred), as.numeric(onl_tst$Revenue))
+
+# Predicting on the test data using the neural network model
+pred = predict(nnetModel, newdata = onl_tst, type = "raw")
+confMatNnet = confusionMatrix(pred, onl_tst$Revenue, "revenue")
+nnetROC = roc(as.numeric(pred), as.numeric(onl_tst$Revenue))
+```
+
+The following table displays the accuracy each model achieved when making predictions on the test data.
+
+```{r, display-accuracies}
+accuracies = c(confMatGBM$overall[["Accuracy"]],
+               confMatSVM$overall[["Accuracy"]],
+               confMatRf$overall[["Accuracy"]],
+               confMatNnet$overall[["Accuracy"]])
+
+tibble(
+  "Model" = c("Stochastic Gradient Boosting", "SVM with Linear Kernel", "Random Forest", "Neural Network"),
+  "Accuracies" =  accuracies
+) %>%
+  kable(caption = "Accuracy of Each Model After Predicting on the Test Set", digits = 4) %>%
+  kable_styling("striped", full_width = FALSE)
+```
+
+Due to class imbalance, accuracy can be a misleading metric. The following table also shows the sensitivity each model achieved.
+
+```{r, display-sensitivites}
+sensitivities = c(confMatGBM$byClass[["Sensitivity"]],
+                  confMatSVM$byClass[["Sensitivity"]],
+                  confMatRf$byClass[["Sensitivity"]],
+                  confMatNnet$byClass[["Sensitivity"]])
+
+tibble(
+  "Model" = c("Stochastic Gradient Boosting", "SVM with Linear Kernel", "Random Forest", "Neural Network"),
+  "Sensitivities" =  sensitivities
+) %>%
+  kable(caption = "Sensitivity of Each Model After Predicting on the Test Set", digits = 4) %>%
+  kable_styling("striped", full_width = FALSE)
+```
+
+The following are plots of the ROC curves generated for each model as well as their respective AUC metrics.
+
+```{r, display-roc}
+par(mfrow = c(2,2))
+p1 = plot.roc(gbmROC,
+         percent = TRUE,
+         print.auc = TRUE,
+         main = "ROC Plot for the Stochastic Gradient Boosting Model")
+
+p2 = plot.roc(svmROC,
+         percent = TRUE,
+         print.auc = TRUE,
+         main = "ROC Plot for the SVM with Linear Kernel Model")
+
+p3 = plot.roc(rfROC,
+         percent = TRUE,
+         print.auc = TRUE,
+         main = "ROC Plot for the Random Forest Model")
+
+p4 = plot.roc(nnetROC,
+         percent = TRUE,
+         print.auc = TRUE,
+         main = "ROC Plot for the Random Forest Model")
+```
+
+Taking into account both the metrics of both accuracy and sensitivity, the chosen model for this task according to this analysis should be a Random Forest model.
+
+The results will be further contextualized in the discussion section.
+
+***
+
+# Discussion
+
+The results of this model are fairly promising. The accuracy here is not the best possible predictor because the accuracy is the true positive and true negative totals divided by the sample size. Here the accuracy can be thrown off because there is a large class imbalance. This means that we could have a model that doesn't actually predict revenue very well because it is correctly predicting the larger amount of sessions that did not generate revenue. This means we need to look at the sensitivity, which is our ability to correctly identify that there would be revenue divided by the amount of ads that actually generate revenue. Here we also see very promising results. In particular the random forest model is still able to correctly identify these 89.41% of the time. In all of the metrics we identify, the Random Forest performs the highest across the board. This is our best performing model and the one that we would select for application. Companies can use this tool to identify potential buyers of their products and target their marketing towards these users.
+
+One caution with application of this model is that the data does not have any provided dictionary, which means that certain features such as region the internet user is from is undetermined. As such it would be very difficult to reliably apply this model in practice, but the modeling itself suggest great promise in being able to correctly classify these features.
+
+***
+
+# Appendix
+
+```{r, include = FALSE}
+names(onl_shop)
+```
+
+- `Administrative` - Administrative Value
+- `Administrative_Duration` - Duration in Administrative Page
+- `Informational` - Informational Value
+- `Informational_Duration` - Duration in Informational Page
+- `ProductRelated` - Product Related Value
+- `ProductRelated_Duration` - Duration in Product Related Page
+- `BounceRates` - Bounce Rates of a web page
+- `ExitRates` - Exit rate of a web page
+- `PageValues` - Page values of each web page
+- `SpecialDay` - Special days like valentine etc
+- `Month` - Month of the year
+- `OperatingSystems` - Operating system used
+- `Browser` - Browser used
+- `Region`- Region of the user
+- `TrafficType` - Traffic Type
+- `VisitorType` - Types of Visitor
+- `Weekend` - Weekend or not
+- `Revenue` - Revenue generated or not
+
+[^1]: [Google Ad Revenue](https://www.statista.com/statistics/266249/advertising-revenue-of-google/)
+[^2]: [Effectiveness of Online Advertising](https://www.invespcro.com/blog/effectiveness-online-advertising/)
+[^3]: [Online Shopper's Intentions](https://www.kaggle.com/roshansharma/online-shoppers-intention)

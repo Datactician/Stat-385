@@ -1,0 +1,419 @@
+---
+title: "Predicting Sales Based on Online Shoppers Behavior"
+author: "John Compton"
+date: '2020-03-09'
+draft: yes
+slug: internet-ad-sales-classification
+tags:
+- r
+- machine learning
+- random forest
+- neural network
+categories: []
+---
+
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<hr />
+<div id="abstract" class="section level1">
+<h1>Abstract</h1>
+<blockquote>
+<p>The internet is flooded with online advertisements that are intended to market products as users perform other tasks. These online advertisements are capable of generating more revenue for the sites that market to the advertisers and for the producers selling their product. The capability to accurately predict whether someone will make a purchase is an integral part of deciding how to advertise. A variety of statistical models such as random forests were applied to be able to classify whether or not someone made a purchase after an advertisement.</p>
+</blockquote>
+<hr />
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The internet has revolutionized modern life and the way we approach almost everything. One of the reasons the internet is provided for free is because search engines like Google are able to monetize online sales, with Google generating 126.3 billion dollars in ad revenue. <a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> The average person sees over 1,700 banner ads per month, although only half of them are even interacted with. <a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> The ability to predict a sale would be a very useful tool for companies that are attempting to market their product and for websites and search engines that are marketing their advertising.</p>
+<p>A variety of statistcal models and learning methods were applied to predict if a customers’ visit to a website resulted in revenue. The data on customers’ interaction with websites was used to classify whether or not any revenue was generated as opposed to the amount of revenue. A variety of different classification models and resampling were used and will be discussed more in the methods and results sections.</p>
+<hr />
+</div>
+<div id="methods" class="section level1">
+<h1>Methods</h1>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>This data was obtained through Kaggle <a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> and is sourced to the Department of Computer Engineering from Bahcesehir University. It consists of both customer behavior related information as well as some additional information about the customer, such as their browser of choice and what operating system they are using. The data set also contains information releating to the duration of time they were in various locations of the site, the proximity of the date the site was accessed to any sort of holiday, or whether the customer had visited the site before.</p>
+<p>The reponse variable “Revenue” has two classes; “TRUE” and “FALSE”. A session labelled “TRUE” meant the user of that session produced revenue (i.e. bought something) from the website. “FALSE” means the user did not for that session.</p>
+<p>There is an imbalance between the two as is illustrated in the following figure.</p>
+<p><img src="/post/2020-03-10-internet-ad-sales-classification_files/figure-html/class-imbalance-fig-1.png" width="768" style="display: block; margin: auto;" /></p>
+<p>The dataset contains some missing values. The following table shows the percentage of missing values each column has.</p>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:missing-data-table">Table 1: </span>Percentage of Missing Values for Each Column of the Shopper Dataset
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Column
+</th>
+<th style="text-align:right;">
+Percentage of Missing Values
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Administrative
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Administrative_Duration
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Informational
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Informational_Duration
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ProductRelated
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ProductRelated_Duration
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BounceRates
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ExitRates
+</td>
+<td style="text-align:right;">
+0.0011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+PageValues
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SpecialDay
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Month
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+OperatingSystems
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Browser
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Region
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TrafficType
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+VisitorType
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Weekend
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Revenue
+</td>
+<td style="text-align:right;">
+0.0000
+</td>
+</tr>
+</tbody>
+</table>
+<p>While the number of missing values was low, we decided that instead of omitting those rows from the dataset, we would impute dummy values to replace those missing values. To impute values, the caret package’s preProcess was used with method “knnImpute” using the default k value. The data was also resampled using the Hmisc package’s SMOTE function.</p>
+</div>
+<div id="modeling" class="section level2">
+<h2>Modeling</h2>
+<p>To determine whether or not a user’s session produced revenue, four classification techniques were used.</p>
+<p>These techniques include:</p>
+<ul>
+<li>Stochastic Gradient Boosting, through the use of the <code>gbm</code> package.</li>
+<li>Support Vector Machine with Linear Kernel, through the use of the <code>kernLab</code> package.</li>
+<li>Random Forest, through the use of the <code>ranger</code> package.</li>
+<li>Neural Network, through the use of the <code>nnet</code> package.</li>
+</ul>
+<div id="evaluation" class="section level3">
+<h3>Evaluation</h3>
+<p>Models were tuned through the use of the <code>caret</code> package.</p>
+<p>Each model was tuned using different metrics:</p>
+<ul>
+<li>The stochastic gradient boosting model and random forest model were tuned to maximize Accuracy.</li>
+<li>The support vector machine model was tuned to maximize Sensitivity.</li>
+<li>The neural network model was tuned to maximize area under the ROC curve.</li>
+</ul>
+<p>While each model’s accuracy when predicting the testing set was taken into consideration, evaluating models based on their sensitivities was also taken into account because of the class imbalance. Since the task is to detect if a user’s session will produce revenue, a model that has poor performance in predicting session’s that produce revenue are valued lower than models that have higher performance in that regard.</p>
+<p>Each model besides the Random Forest model was trained using 5-fold cross-validation. The Random Forest model uses out-of-bag error.</p>
+</div>
+<div id="stochastic-gradient-boosting" class="section level3">
+<h3>Stochastic Gradient Boosting</h3>
+<pre class="r"><code>gbmModel = train(
+  Revenue ~ .,
+  data = onl_trn,
+  method = &quot;gbm&quot;,
+  verbose = FALSE,
+  metric = &quot;ROC&quot;,
+  trControl = cv_trControl
+)</code></pre>
+</div>
+<div id="support-vector-machine-with-linear-kernel" class="section level3">
+<h3>Support Vector Machine with Linear Kernel</h3>
+<pre class="r"><code>svmModel = train(
+  form = Revenue ~ .,
+  data = onl_trn,
+  metric = &quot;Sens&quot;,
+  maximize = TRUE,
+  verbose = FALSE,
+  method = &quot;svmLinear&quot;,
+  trControl = cv_trControl
+)</code></pre>
+</div>
+<div id="random-forest" class="section level3">
+<h3>Random Forest</h3>
+<pre class="r"><code>rfModel = train(
+  form = Revenue ~ .,
+  data = onl_trn,
+  verbose = FALSE,
+  method = &quot;ranger&quot;,
+  trControl = oob_trControl
+)</code></pre>
+</div>
+<div id="neural-network" class="section level3">
+<h3>Neural Network</h3>
+<pre class="r"><code>nnetModel = train(
+  Revenue ~ ., 
+  data = onl_trn,
+  method = &quot;nnet&quot;,
+  metric = &quot;ROC&quot;,
+  verbose = FALSE,
+  trace = FALSE,
+  trControl = cv_trControl
+)</code></pre>
+<p>Model selection and evaluation will be further considered in the results and discussion sections.</p>
+<hr />
+</div>
+</div>
+</div>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<p>The following table displays the accuracy each model achieved when making predictions on the test data.</p>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:display-accuracies">Table 2: </span>Accuracy of Each Model After Predicting on the Test Set
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:right;">
+Accuracies
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Stochastic Gradient Boosting
+</td>
+<td style="text-align:right;">
+0.8853
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SVM with Linear Kernel
+</td>
+<td style="text-align:right;">
+0.8368
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Random Forest
+</td>
+<td style="text-align:right;">
+0.9030
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neural Network
+</td>
+<td style="text-align:right;">
+0.8788
+</td>
+</tr>
+</tbody>
+</table>
+<p>Due to class imbalance, accuracy can be a misleading metric. The following table also shows the sensitivity each model achieved.</p>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:display-sensitivites">Table 3: </span>Sensitivity of Each Model After Predicting on the Test Set
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Model
+</th>
+<th style="text-align:right;">
+Sensitivities
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Stochastic Gradient Boosting
+</td>
+<td style="text-align:right;">
+0.8680
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+SVM with Linear Kernel
+</td>
+<td style="text-align:right;">
+0.7503
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Random Forest
+</td>
+<td style="text-align:right;">
+0.8915
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Neural Network
+</td>
+<td style="text-align:right;">
+0.8680
+</td>
+</tr>
+</tbody>
+</table>
+<p>The following are plots of the ROC curves generated for each model as well as their respective AUC metrics.</p>
+<p><img src="/post/2020-03-10-internet-ad-sales-classification_files/figure-html/display-roc-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Taking into account both the metrics of both accuracy and sensitivity, the chosen model for this task according to this analysis should be a Random Forest model.</p>
+<p>The results will be further contextualized in the discussion section.</p>
+<hr />
+</div>
+<div id="discussion" class="section level1">
+<h1>Discussion</h1>
+<p>The results of this model are fairly promising. The accuracy here is not the best possible predictor because the accuracy is the true positive and true negative totals divided by the sample size. Here the accuracy can be thrown off because there is a large class imbalance. This means that we could have a model that doesn’t actually predict revenue very well because it is correctly predicting the larger amount of sessions that did not generate revenue. This means we need to look at the sensitivity, which is our ability to correctly identify that there would be revenue divided by the amount of ads that actually generate revenue. Here we also see very promising results. In particular the random forest model is still able to correctly identify these 89.41% of the time. In all of the metrics we identify, the Random Forest performs the highest across the board. This is our best performing model and the one that we would select for application. Companies can use this tool to identify potential buyers of their products and target their marketing towards these users.</p>
+<p>One caution with application of this model is that the data does not have any provided dictionary, which means that certain features such as region the internet user is from is undetermined. As such it would be very difficult to reliably apply this model in practice, but the modeling itself suggest great promise in being able to correctly classify these features.</p>
+<hr />
+</div>
+<div id="appendix" class="section level1">
+<h1>Appendix</h1>
+<ul>
+<li><code>Administrative</code> - Administrative Value</li>
+<li><code>Administrative_Duration</code> - Duration in Administrative Page</li>
+<li><code>Informational</code> - Informational Value</li>
+<li><code>Informational_Duration</code> - Duration in Informational Page</li>
+<li><code>ProductRelated</code> - Product Related Value</li>
+<li><code>ProductRelated_Duration</code> - Duration in Product Related Page</li>
+<li><code>BounceRates</code> - Bounce Rates of a web page</li>
+<li><code>ExitRates</code> - Exit rate of a web page</li>
+<li><code>PageValues</code> - Page values of each web page</li>
+<li><code>SpecialDay</code> - Special days like valentine etc</li>
+<li><code>Month</code> - Month of the year</li>
+<li><code>OperatingSystems</code> - Operating system used</li>
+<li><code>Browser</code> - Browser used</li>
+<li><code>Region</code>- Region of the user</li>
+<li><code>TrafficType</code> - Traffic Type</li>
+<li><code>VisitorType</code> - Types of Visitor</li>
+<li><code>Weekend</code> - Weekend or not</li>
+<li><code>Revenue</code> - Revenue generated or not</li>
+</ul>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p><a href="https://www.statista.com/statistics/266249/advertising-revenue-of-google/">Google Ad Revenue</a><a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p><a href="https://www.invespcro.com/blog/effectiveness-online-advertising/">Effectiveness of Online Advertising</a><a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p><a href="https://www.kaggle.com/roshansharma/online-shoppers-intention">Online Shopper’s Intentions</a><a href="#fnref3" class="footnote-back">↩</a></p></li>
+</ol>
+</div>
